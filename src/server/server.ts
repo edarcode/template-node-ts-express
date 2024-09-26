@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import { welcomeRouter } from "../modules/welcome/welcomeRoute";
-import { usersRouter } from "../modules/users/usersRouter";
 import { routeNotFoundHandler } from "./routeNotFoundHandler";
 import { errorHandler } from "./errHandler";
 
@@ -17,7 +16,6 @@ server.use(express.json());
 // routes
 
 server.use("", welcomeRouter);
-server.use("/users", usersRouter);
 
 // handlers
 
