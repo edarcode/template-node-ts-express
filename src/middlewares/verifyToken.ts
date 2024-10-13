@@ -1,19 +1,29 @@
-import jwt from "jsonwebtoken";
-import { Middleware } from "../types";
-import { EdarErr } from "../errors/EdarErr";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { Next, Req, Res } from "../types";
 import { JWT } from "../config/jwt";
+import { UnauthorizedErr } from "../errors/UnauthorizedErr";
 
-export const verifyToken: Middleware = (req, res, next) => {
-  try {
-    const token = req.headers.authorization;
-    if (!token) throw new EdarErr({ status: 404, msg: "Unauthorized" });
+export const verifyToken = ({ role }: Params) => {
+  return (req: Req, res: Res, next: Next) => {
+    try {
+      const token = req.headers.authorization;
+      if (!token) throw new UnauthorizedErr();
 
-    jwt.verify(token, JWT.secret as string, (err, tokenPayload) => {
-      if (err) throw new EdarErr({ status: 401, msg: "Unauthorized token" });
-      res.locals = { ...res.locals, tokenPayload };
-      next();
-    });
-  } catch (error) {
-    next(error);
-  }
+      jwt.verify(token, JWT.secret as string, (err, decoded) => {
+        if (err) throw new UnauthorizedErr(401);
+
+        const tokenPayload = decoded as JwtPayload;
+        if (role && tokenPayload?.role !== role) throw new UnauthorizedErr(403);
+
+        res.locals = { ...res.locals, tokenPayload };
+        next();
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+type Params = {
+  role?: string; // tipar con el role de la db
 };
